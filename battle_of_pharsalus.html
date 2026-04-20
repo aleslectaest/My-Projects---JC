@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battle of Pharsalus — 48 BC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#080808;overflow:hidden}
+#app{width:100vw;height:100vh;display:flex;flex-direction:column;background:#080808;position:relative}
+
+/* HEADER */
+.hdr{flex-shrink:0;padding:10px 24px 8px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;background:#060606;z-index:10}
+.hdr-title{font-family:'Cinzel Decorative',serif;font-size:16px;font-weight:700;color:#c8a050;letter-spacing:.12em}
+.hdr-sub{font-family:'Cinzel',serif;font-size:10px;color:#3a3020;letter-spacing:.15em;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.legend{display:flex;gap:14px;align-items:center}
+.leg{display:flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em}
+.leg-c{width:22px;height:3px}
+.leg-caesar{background:#cc2200}
+.leg-pompey{background:#1a5fc8}
+.leg-text-c{color:#cc3311}
+.leg-text-p{color:#2266cc}
+
+/* STAGE NAV BAR */
+.stagebar{flex-shrink:0;padding:6px 24px;background:#040404;border-bottom:1px solid #141414;display:flex;gap:5px;align-items:center;overflow-x:auto}
+.stg-btn{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:.06em;padding:3px 10px;border:1px solid #1e1e1e;background:none;color:#3a3020;cursor:pointer;transition:all .2s;white-space:nowrap}
+.stg-btn:hover{border-color:#c8a050;color:#c8a050}
+.stg-btn.active{background:#c8a050;border-color:#c8a050;color:#080808;font-weight:600}
+.stg-num{color:#2a2018;margin-right:4px;font-size:8px}
+
+/* MAP AREA */
+#map-wrap{flex:1;position:relative;overflow:hidden;background:#080808}
+#battle-svg{width:100%;height:100%;display:block}
+
+/* BOTTOM INFO PANEL */
+.info-panel{flex-shrink:0;background:#040404;border-top:1px solid #1a1a1a;padding:10px 24px;min-height:90px;max-height:90px;display:flex;gap:24px;align-items:flex-start;overflow:hidden}
+.info-stage{min-width:120px}
+.info-stg-num{font-family:'Cinzel',serif;font-size:8px;color:#c8a050;letter-spacing:.15em;margin-bottom:3px}
+.info-stg-title{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#e0d0a0;line-height:1.3}
+.info-divider{width:1px;background:#1a1a1a;align-self:stretch;flex-shrink:0}
+.info-desc{flex:1;font-family:'IM Fell English',serif;font-size:11px;color:#6a5e40;line-height:1.65;font-style:italic}
+.info-nav{display:flex;flex-direction:column;gap:6px;min-width:130px;align-self:center}
+.nav-btn{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:6px 14px;border:1px solid;cursor:pointer;transition:all .2s;background:none}
+.nav-next{border-color:#c8a050;color:#c8a050}
+.nav-next:hover{background:#c8a050;color:#080808}
+.nav-prev{border-color:#2a2018;color:#3a3020}
+.nav-prev:hover{border-color:#6a5e40;color:#6a5e40}
+.nav-btn:disabled{opacity:.2;cursor:default}
+
+/* UNIT ANIMATIONS */
+@keyframes pulse-red{0%,100%{opacity:1;r:7}50%{opacity:.7;r:9}}
+@keyframes pulse-blue{0%,100%{opacity:1;r:7}50%{opacity:.7;r:9}}
+@keyframes clash-flash{0%,100%{opacity:0}20%,80%{opacity:1}}
+@keyframes advance{0%{transform:translateX(0)}100%{transform:translateX(var(--adv))}}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fade-in .5s ease forwards}
+
+/* ARROW MARKERS defined in SVG defs */
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">PHARSALVS · XLVIII A.C.N.</div>
+      <div class="hdr-sub">IX KAL. SEPT. · THESSALIA · THE DECISIVE BATTLE OF THE ROMAN CIVIL WAR</div>
+    </div>
+    <div class="hdr-right">
+      <div class="legend">
+        <div class="leg"><div class="leg-c leg-caesar"></div><span class="leg-text-c">CAESAR · LEGIO XIV</span></div>
+        <div class="leg"><div class="leg-c leg-pompey"></div><span class="leg-text-p">POMPEIVS · LEGIO XLVII</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stagebar" id="stagebar"></div>
+
+  <div id="map-wrap">
+    <svg id="battle-svg" viewBox="0 0 1000 580" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Caesar red arrow -->
+        <marker id="arr-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 1L9 5L1 9" fill="none" stroke="#cc2200" stroke-width="2" stroke-linecap="round"/>
+        </marker>
+        <!-- Pompey blue arrow -->
+        <marker id="arr-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 1L9 5L1 9" fill="none" stroke="#1a5fc8" stroke-width="2" stroke-linecap="round"/>
+        </marker>
+        <!-- Retreat arrow gray -->
+        <marker id="arr-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 1L9 5L1 9" fill="none" stroke="#4a4030" stroke-width="2" stroke-linecap="round"/>
+        </marker>
+        <filter id="glow-red">
+          <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-blue">
+          <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-gold">
+          <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- Land texture -->
+        <pattern id="land-tex" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+          <rect width="5" height="5" fill="#0e0c08"/>
+          <circle cx="2.5" cy="2.5" r=".4" fill="#141208" opacity=".5"/>
+        </pattern>
+        <!-- Water texture -->
+        <pattern id="water-tex" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+          <rect width="8" height="8" fill="#050d1a"/>
+          <line x1="0" y1="4" x2="8" y2="4" stroke="#081525" stroke-width=".6" opacity=".6"/>
+          <line x1="0" y1="8" x2="8" y2="8" stroke="#081525" stroke-width=".4" opacity=".4"/>
+        </pattern>
+        <!-- Hill pattern -->
+        <pattern id="hill-tex" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <rect width="6" height="6" fill="#121008"/>
+          <line x1="0" y1="3" x2="6" y2="3" stroke="#1a1810" stroke-width=".5"/>
+        </pattern>
+      </defs>
+
+      <!-- Static base layer — always visible -->
+      <!-- FULL MAP BACKGROUND (land) -->
+      <rect width="1000" height="580" fill="url(#land-tex)"/>
+
+      <!-- ENIPEUS RIVER (runs west to east across battlefield) -->
+      <path d="M 0,360 Q 80,358 160,354 Q 240,350 320,348 Q 400,346 480,347 Q 560,348 640,350 Q 720,353 800,357 Q 880,361 950,366 L 1000,368" fill="none" stroke="url(#water-tex)" stroke-width="0"/>
+      <!-- River fill -->
+      <path d="M 0,354 Q 100,352 200,348 Q 300,344 400,343 Q 500,343 600,345 Q 700,348 800,353 Q 900,358 1000,364
+               L 1000,372 Q 900,366 800,361 Q 700,356 600,353 Q 500,351 400,351 Q 300,352 200,356 Q 100,360 0,364 Z"
+            fill="#05101e" stroke="#0a1e35" stroke-width="1"/>
+      <text x="820" y="346" fill="#081828" font-size="9" font-family="Cinzel,serif" letter-spacing=".12em" opacity=".8">ENIPEVS FL.</text>
+
+      <!-- Hills on Pompey's right (north) -->
+      <path d="M 500,30 Q 540,50 580,80 Q 620,110 650,145 Q 670,168 660,190 Q 645,205 620,210 Q 590,212 565,205 Q 540,196 522,182 Q 500,164 490,142 Q 478,116 480,90 Q 484,62 500,30Z"
+            fill="url(#hill-tex)" stroke="#1e1c10" stroke-width="1" opacity=".8"/>
+      <text x="565" y="130" fill="#2a2618" font-size="8.5" font-family="Cinzel,serif" letter-spacing=".06em" text-anchor="middle" font-style="italic">Colles</text>
+
+      <!-- Rolling terrain north -->
+      <path d="M 200,20 Q 260,40 300,70 Q 330,95 320,120 Q 305,138 280,142 Q 255,144 235,132 Q 212,118 205,92 Q 198,64 200,20Z"
+            fill="url(#hill-tex)" stroke="#1e1c10" stroke-width=".8" opacity=".6"/>
+
+      <!-- Pharsalus town (south, across river) -->
+      <rect x="320" y="395" width="36" height="24" rx="3" fill="#141008" stroke="#3a3020" stroke-width="1"/>
+      <text x="338" y="408" fill="#5a4e30" font-size="8" font-family="Cinzel,serif" letter-spacing=".08em" text-anchor="middle">PHAR</text>
+      <text x="338" y="417" fill="#5a4e30" font-size="7" font-family="Cinzel,serif" letter-spacing=".06em" text-anchor="middle">SALVS</text>
+
+      <!-- Pompey camp (north hillside) -->
+      <rect x="658" y="80" width="50" height="36" rx="2" fill="#050810" stroke="#1a3060" stroke-width="1"/>
+      <text x="683" y="97" fill="#1a4080" font-size="7.5" font-family="Cinzel,serif" letter-spacing=".06em" text-anchor="middle">CASTRA</text>
+      <text x="683" y="108" fill="#1a4080" font-size="7" font-family="Cinzel,serif" letter-spacing=".04em" text-anchor="middle">POMPEI</text>
+
+      <!-- Caesar camp (south of river, west) -->
+      <rect x="58" y="390" width="50" height="36" rx="2" fill="#100504" stroke="#601510" stroke-width="1"/>
+      <text x="83" y="407" fill="#802010" font-size="7.5" font-family="Cinzel,serif" letter-spacing=".06em" text-anchor="middle">CASTRA</text>
+      <text x="83" y="418" fill="#802010" font-size="7" font-family="Cinzel,serif" letter-spacing=".04em" text-anchor="middle">CAESARIS</text>
+
+      <!-- Compass rose -->
+      <g transform="translate(940,50)">
+        <circle cx="0" cy="0" r="18" fill="none" stroke="#1e1c10" stroke-width=".8"/>
+        <line x1="0" y1="-16" x2="0" y2="16" stroke="#2a2618" stroke-width=".8"/>
+        <line x1="-16" y1="0" x2="16" y2="0" stroke="#2a2618" stroke-width=".8"/>
+        <text x="0" y="-19" fill="#3a3020" font-size="9" font-family="Cinzel,serif" text-anchor="middle">N</text>
+        <text x="0" y="27" fill="#2a2018" font-size="8" font-family="Cinzel,serif" text-anchor="middle">S</text>
+        <text x="20" y="4" fill="#2a2018" font-size="8" font-family="Cinzel,serif" text-anchor="middle">E</text>
+        <text x="-20" y="4" fill="#2a2018" font-size="8" font-family="Cinzel,serif" text-anchor="middle">O</text>
+      </g>
+
+      <!-- Scale bar -->
+      <g transform="translate(30,545)">
+        <line x1="0" y1="0" x2="120" y2="0" stroke="#2a2618" stroke-width="1"/>
+        <line x1="0" y1="-4" x2="0" y2="4" stroke="#2a2618" stroke-width="1"/>
+        <line x1="60" y1="-3" x2="60" y2="3" stroke="#2a2618" stroke-width=".8"/>
+        <line x1="120" y1="-4" x2="120" y2="4" stroke="#2a2618" stroke-width="1"/>
+        <text x="0" y="-8" fill="#2a2018" font-size="7" font-family="Cinzel,serif" text-anchor="middle">0</text>
+        <text x="60" y="-8" fill="#2a2018" font-size="7" font-family="Cinzel,serif" text-anchor="middle">1 km</text>
+        <text x="120" y="-8" fill="#2a2018" font-size="7" font-family="Cinzel,serif" text-anchor="middle">2 km</text>
+      </g>
+
+      <!-- Dynamic stage layer -->
+      <g id="stage-layer"></g>
+
+    </svg>
+  </div>
+
+  <div class="info-panel">
+    <div class="info-stage">
+      <div class="info-stg-num" id="info-num">STAGE I</div>
+      <div class="info-stg-title" id="info-title">—</div>
+    </div>
+    <div class="info-divider"></div>
+    <div class="info-desc" id="info-desc">—</div>
+    <div class="info-divider"></div>
+    <div class="info-nav">
+      <button class="nav-btn nav-next" id="btn-next" onclick="nextStage()">ADVANCE ›</button>
+      <button class="nav-btn nav-prev" id="btn-prev" onclick="prevStage()">‹ RETREAT</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   BATTLE OF PHARSALUS — 9 August 48 BC
+   Each stage is a complete SVG scene drawn over the static base.
+   Coordinates:
+     West (Caesar's left / Pompey's right) = x ≈ 80–200
+     East (Caesar's right / Pompey's left) = x ≈ 700–850
+     Caesar's line y ≈ 290–320  (north of Enipeus)
+     Pompey's line y ≈ 200–240
+     Enipeus river y ≈ 343–372
+   ============================================================ */
+
+const STAGES = [
+
+  // ── STAGE 1 ──────────────────────────────────────────────
+  {
+    num: 'STAGE I',
+    title: 'The Armies Assemble',
+    desc: 'Dawn, 9 August 48 BC. Caesar draws his army out of camp and forms three lines facing north. His 22,000 veterans are heavily outnumbered. Pompey deploys 47,000 infantry and 7,000 cavalry on the plain between the Enipeus and the hill ridge. Pompey anchors his left on the river; Caesar anchors his right on broken ground. Both sides wait. Caesar\'s men are eager — they have been starving. Pompey\'s soldiers are comfortable and confident.',
+
+    svg: `
+    <!-- ===== CAESAR'S ARMY — South line, west to east ===== -->
+    <!-- Label -->
+    <text x="440" y="268" fill="#cc2200" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">CAESAR · LEGIO XIV · 22,000 inf · 1,000 eq.</text>
+
+    <!-- Caesar's Infantry line: 3 cohort lines represented as rectangles -->
+    <!-- Left wing (X Legion — Caesar's best, on HIS right = east) anchored near hills -->
+    <!-- Actually Caesar's RIGHT is on the hills (east). Left anchors on river. -->
+    <!-- West (left) flank -->
+    <rect x="90" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="117" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO IX</text>
+    <rect x="155" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="182" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO VIII</text>
+    <rect x="220" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="247" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XI</text>
+    <rect x="285" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="312" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XII</text>
+    <rect x="350" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="377" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVII</text>
+    <rect x="415" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="442" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVIII</text>
+    <!-- Center -->
+    <rect x="480" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="507" y="304" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XIII</text>
+    <!-- Right flank -->
+    <rect x="545" y="290" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".95"/>
+    <text x="572" y="304" fill="#ee5533" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-weight="bold">LEGIO X</text>
+    <!-- Caesar's cavalry (small, left/west flank) -->
+    <ellipse cx="80" cy="270" rx="18" ry="10" fill="#200500" stroke="#cc2200" stroke-width="1" opacity=".8"/>
+    <text x="80" y="273" fill="#aa2200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">EQ.</text>
+
+    <!-- Caesar command indicator -->
+    <circle cx="340" cy="280" r="5" fill="#cc2200" opacity=".8" filter="url(#glow-red)"/>
+    <text x="340" y="272" fill="#c8a050" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+
+    <!-- SECRET RESERVE COHORTS (oblique angle, behind right flank) — Caesar's masterstroke hidden here -->
+    <rect x="608" y="272" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" stroke-dasharray="4,2" opacity=".7" transform="rotate(-15,633,281)"/>
+    <text x="633" y="283" fill="#882200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" transform="rotate(-15,633,283)">VI COH.</text>
+    <text x="633" y="265" fill="#5a3020" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">RESERVA</text>
+
+    <!-- ===== POMPEY'S ARMY — North line ===== -->
+    <text x="450" y="193" fill="#1a5fc8" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">POMPEIVS · LEGIO XLVII · 47,000 inf · 7,000 eq.</text>
+
+    <!-- Pompey left (west, anchored on Enipeus / river) -->
+    <rect x="90" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="120" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEG. I & III</text>
+    <!-- Pompey infantry — much wider/longer line -->
+    <rect x="160" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="190" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">AFRANI</text>
+    <rect x="230" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="260" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">SYRIACI</text>
+    <rect x="300" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="330" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">HISPANI</text>
+    <rect x="370" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="400" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">ITALICI</text>
+    <rect x="440" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="470" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">GRAECI</text>
+    <rect x="510" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <text x="540" y="224" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">ORIENT.</text>
+    <!-- Pompey right wing infantry -->
+    <rect x="580" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.4" opacity=".95"/>
+    <text x="610" y="224" fill="#4a90e8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">DOM. AHE.</text>
+
+    <!-- Pompey's MASSIVE cavalry right wing -->
+    <ellipse cx="720" cy="224" rx="55" ry="22" fill="#030c20" stroke="#1a5fc8" stroke-width="1.4" opacity=".9"/>
+    <text x="720" y="222" fill="#3a80d8" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">EQUITATUS</text>
+    <text x="720" y="233" fill="#2a60b8" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">VII,000</text>
+    <!-- Allied cavalry east -->
+    <ellipse cx="800" cy="214" rx="30" ry="16" fill="#030c20" stroke="#1a5fc8" stroke-width="1" opacity=".8"/>
+    <text x="800" y="217" fill="#2a60b8" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">SOCII</text>
+
+    <!-- Pompey command indicator -->
+    <circle cx="430" cy="200" r="5" fill="#1a5fc8" opacity=".8" filter="url(#glow-blue)"/>
+    <text x="430" y="192" fill="#c8d8f8" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">P</text>
+
+    <!-- Pompey's archers / slingers (skirmishers) in front -->
+    <text x="400" y="248" fill="#0a2848" font-size="7" font-family="Cinzel,serif" text-anchor="middle" letter-spacing=".06em" font-style="italic">— sagittarii · funditores —</text>
+
+    <!-- Distance gap annotation -->
+    <line x1="200" y1="246" x2="200" y2="278" stroke="#2a2618" stroke-width=".6" stroke-dasharray="3,3"/>
+    <text x="210" y="265" fill="#3a3020" font-size="7.5" font-family="Cinzel,serif" font-style="italic">~300 passus</text>
+
+    <!-- Titus Labienus annotation (Pompey's cavalry commander) -->
+    <text x="740" y="200" fill="#2a5090" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">T. LABIENVS</text>
+    <!-- Mark Antony annotation (Caesar's left) -->
+    <text x="100" y="284" fill="#8a2010" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">M. ANTONIVS</text>
+    <!-- Domitius Calvinus (Caesar's center) -->
+    <text x="350" y="284" fill="#8a2010" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">CN. DOMITIVS</text>
+    <!-- Sulla (Caesar's right) -->
+    <text x="572" y="284" fill="#8a2010" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">P. SULLA</text>
+    `
+  },
+
+  // ── STAGE 2 ──────────────────────────────────────────────
+  {
+    num: 'STAGE II',
+    title: 'Caesar Advances — Pompey Waits',
+    desc: 'Caesar gives the signal to advance. His legions step off in perfect order. Pompey, advised by his generals, orders his infantry to HOLD — forcing Caesar to cover the ground alone and arrive winded. Halfway across the field, Caesar\'s veterans halt of their own accord, rest briefly, dress ranks, then resume — a mark of extraordinary discipline. Pompey\'s plan to exhaust Caesar\'s men before contact nearly works. Pompey\'s massive cavalry on the right begins to advance toward Caesar\'s left flank.',
+
+    svg: `
+    <!-- Pompey's line — STATIONARY, still at north position -->
+    <text x="450" y="193" fill="#1a5fc8" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">POMPEIVS — HOLDS POSITION</text>
+    <rect x="90" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="160" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="230" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="300" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="370" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="440" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="510" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".9"/>
+    <rect x="580" y="210" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.4" opacity=".9"/>
+    <ellipse cx="720" cy="224" rx="55" ry="22" fill="#030c20" stroke="#1a5fc8" stroke-width="1.4" opacity=".9"/>
+    <text x="720" y="222" fill="#3a80d8" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">EQUITATUS</text>
+    <text x="720" y="233" fill="#2a60b8" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">VII,000</text>
+    <ellipse cx="800" cy="214" rx="30" ry="16" fill="#030c20" stroke="#1a5fc8" stroke-width="1" opacity=".8"/>
+    <circle cx="430" cy="200" r="5" fill="#1a5fc8" opacity=".8" filter="url(#glow-blue)"/>
+    <text x="430" y="192" fill="#c8d8f8" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">P</text>
+    <text x="750" y="200" fill="#2a5090" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">T. LABIENVS</text>
+    <!-- HOLD annotation -->
+    <text x="350" y="247" fill="#0a3060" font-size="8.5" font-family="Cinzel,serif" text-anchor="middle" letter-spacing=".12em" opacity=".8">MANETE · IN · LOCO</text>
+
+    <!-- Caesar ADVANCES — midway across the field, stopped to rest -->
+    <text x="420" y="268" fill="#cc2200" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">CAESAR — ADVANCING</text>
+    <!-- Advance arrows -->
+    <line x1="130" y1="288" x2="130" y2="263" stroke="#cc2200" stroke-width="1.5" opacity=".5" marker-end="url(#arr-c)" stroke-dasharray="4,3"/>
+    <line x1="280" y1="288" x2="280" y2="263" stroke="#cc2200" stroke-width="1.5" opacity=".5" marker-end="url(#arr-c)" stroke-dasharray="4,3"/>
+    <line x1="430" y1="288" x2="430" y2="263" stroke="#cc2200" stroke-width="1.5" opacity=".5" marker-end="url(#arr-c)" stroke-dasharray="4,3"/>
+    <line x1="580" y1="288" x2="580" y2="263" stroke="#cc2200" stroke-width="1.5" opacity=".5" marker-end="url(#arr-c)" stroke-dasharray="4,3"/>
+
+    <!-- Caesar infantry at mid-field (~265) — HALTED TO REST -->
+    <rect x="90" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="117" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO IX</text>
+    <rect x="155" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="182" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO VIII</text>
+    <rect x="220" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="247" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XI</text>
+    <rect x="285" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="312" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XII</text>
+    <rect x="350" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="377" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVII</text>
+    <rect x="415" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="442" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVIII</text>
+    <rect x="480" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="507" y="278" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XIII</text>
+    <rect x="545" y="264" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".95"/>
+    <text x="572" y="278" fill="#ee5533" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO X</text>
+
+    <!-- Rest annotation -->
+    <text x="330" y="255" fill="#8a3010" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic" letter-spacing=".06em">— requiescunt · ordines restituunt —</text>
+
+    <!-- Caesar's cavalry small (west) -->
+    <ellipse cx="75" cy="252" rx="18" ry="10" fill="#200500" stroke="#cc2200" stroke-width="1" opacity=".8"/>
+    <text x="75" y="256" fill="#aa2200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">EQ.</text>
+
+    <!-- Reserve cohorts (still oblique, behind right) -->
+    <rect x="608" y="246" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" stroke-dasharray="4,2" opacity=".7" transform="rotate(-15,633,255)"/>
+    <text x="633" y="257" fill="#882200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" transform="rotate(-15,633,257)">VI COH.</text>
+
+    <!-- Caesar command -->
+    <circle cx="340" cy="254" r="5" fill="#cc2200" opacity=".8" filter="url(#glow-red)"/>
+    <text x="340" y="246" fill="#c8a050" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+
+    <!-- Pompey cavalry moving south-west to flank -->
+    <line x1="690" y1="234" x2="670" y2="252" stroke="#1a5fc8" stroke-width="1.5" opacity=".6" marker-end="url(#arr-p)" stroke-dasharray="5,3"/>
+    <text x="720" y="260" fill="#1a4080" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">equitatus movet...</text>
+    `
+  },
+
+  // ── STAGE 3 ──────────────────────────────────────────────
+  {
+    num: 'STAGE III',
+    title: 'Lines Clash — The Pilum Volley',
+    desc: 'The two infantries collide along the entire front. Caesar\'s legions hurl their pila (heavy javelins) at close range — the weighted iron heads punch through shields, bending on impact so they cannot be thrown back. With pila spent, both sides draw swords and the brutal close-quarters killing begins. Caesar notes that Pompey\'s veterans from the East fought with uncommon ferocity. On the Pompeian right, Labienus launches his 7,000 cavalry in a sweeping charge to overwhelm Caesar\'s thin left flank and roll up the entire line.',
+
+    svg: `
+    <!-- ===== CONTACT ALONG THE LINE ===== -->
+    <text x="450" y="193" fill="#1a5fc8" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">POMPEIVS — LINE ENGAGED</text>
+    <text x="420" y="258" fill="#cc2200" font-size="9" font-family="Cinzel,serif" letter-spacing=".1em" text-anchor="middle" opacity=".9">CAESAR — PILA IACTA · GLADII STRICTI</text>
+
+    <!-- Pompey line (pushed slightly south by impact — now at 216) -->
+    <rect x="90" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="160" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="230" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="300" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="370" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="440" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="510" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.3" opacity=".9"/>
+    <rect x="580" y="216" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.4" opacity=".9"/>
+    <circle cx="430" cy="207" r="5" fill="#1a5fc8" opacity=".8" filter="url(#glow-blue)"/>
+    <text x="430" y="199" fill="#c8d8f8" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">P</text>
+
+    <!-- CLASH ZONE — jagged contact line -->
+    <path d="M 90,238 L 110,244 L 130,238 L 150,244 L 170,238 L 190,244 L 210,238 L 230,244 L 250,238 L 270,244 L 290,238 L 310,244 L 330,238 L 350,244 L 370,238 L 390,244 L 410,238 L 430,244 L 450,238 L 470,244 L 490,238 L 510,244 L 530,238 L 550,244 L 570,238 L 590,244 L 610,238 L 630,244 L 640,238"
+          fill="none" stroke="#8a3010" stroke-width="1.2" opacity=".5"/>
+
+    <!-- Caesar line at contact -->
+    <rect x="90" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="117" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO IX</text>
+    <rect x="155" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="182" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO VIII</text>
+    <rect x="220" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="247" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XI</text>
+    <rect x="285" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="312" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XII</text>
+    <rect x="350" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="377" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVII</text>
+    <rect x="415" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="442" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVIII</text>
+    <rect x="480" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="507" y="260" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XIII</text>
+    <rect x="545" y="246" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".95"/>
+    <text x="572" y="260" fill="#ee5533" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO X</text>
+
+    <!-- Caesar cavalry (left, being pressured) -->
+    <ellipse cx="70" cy="238" rx="18" ry="10" fill="#200500" stroke="#cc2200" stroke-width="1" opacity=".8"/>
+    <text x="70" y="241" fill="#aa2200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">EQ.</text>
+
+    <!-- Reserve cohorts hidden behind Legio X -->
+    <rect x="610" y="240" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" stroke-dasharray="4,2" opacity=".7" transform="rotate(-15,635,249)"/>
+    <text x="635" y="251" fill="#882200" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" transform="rotate(-15,635,251)">VI COH.</text>
+    <text x="640" y="236" fill="#5a2010" font-size="6" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">OCCULTA</text>
+
+    <!-- POMPEY'S CAVALRY CHARGE — massive sweep left and south -->
+    <ellipse cx="700" cy="215" rx="55" ry="22" fill="#030c20" stroke="#1a5fc8" stroke-width="1.6" opacity=".9"/>
+    <text x="700" y="213" fill="#3a80d8" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">EQUITATUS</text>
+    <text x="700" y="224" fill="#2a60b8" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">LABIENVS</text>
+    <!-- Cavalry charge arrows sweeping around Caesar's left -->
+    <path d="M 660,228 Q 620,248 580,258 Q 550,264 520,262" fill="none" stroke="#1a5fc8" stroke-width="2.5" opacity=".8" marker-end="url(#arr-p)"/>
+    <path d="M 680,232 Q 650,260 620,272 Q 590,278 560,278" fill="none" stroke="#1a5fc8" stroke-width="2" opacity=".6" marker-end="url(#arr-p)"/>
+    <!-- Caesar's small cavalry being swept aside -->
+    <text x="55" y="220" fill="#cc2200" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">← pushed!</text>
+
+    <!-- Command -->
+    <circle cx="340" cy="238" r="5" fill="#cc2200" opacity=".8" filter="url(#glow-red)"/>
+    <text x="340" y="230" fill="#c8a050" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+
+    <!-- Pilum annotation -->
+    <text x="420" y="242" fill="#6a3010" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">— pila coniecta —</text>
+    `
+  },
+
+  // ── STAGE 4 ──────────────────────────────────────────────
+  {
+    num: 'STAGE IV',
+    title: 'Labienus Charges — Caesar\'s Secret Revealed',
+    desc: 'Labienus\'s 7,000 cavalry sweep around Caesar\'s left flank and begin to encircle his line — exactly as Pompey planned. Caesar had anticipated this. He had secretly withdrawn 6 cohorts from his third line before the battle, placing them at an oblique angle behind his Legio X on the right. Now Caesar gives the signal. These cohorts wheel left in perfect formation and CHARGE the Pompeian cavalry. The order: "Aim for the faces." Roman veterans, unused to such an attack, drive their pila UPWARD into the eyes of the cavalrymen — and the cavalry breaks.',
+
+    svg: `
+    <!-- Pompey line engaged/strained -->
+    <text x="370" y="193" fill="#1a5fc8" font-size="9" font-family="Cinzel,serif" letter-spacing=".08em" text-anchor="middle" opacity=".9">POMPEIVS — INFANTRY ENGAGED</text>
+    <rect x="90" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="160" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="230" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="300" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="370" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="440" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="510" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="580" y="212" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.4" opacity=".85"/>
+
+    <!-- Clash line -->
+    <path d="M 90,234 L 110,240 L 130,234 L 150,240 L 170,234 L 190,240 L 210,234 L 230,240 L 250,234 L 270,240 L 290,234 L 310,240 L 330,234 L 350,240 L 370,234 L 390,240 L 410,234 L 430,240 L 450,234 L 470,240 L 490,234 L 510,240 L 530,234 L 550,240 L 570,234 L 590,240 L 620,234"
+          fill="none" stroke="#8a3010" stroke-width="1.5" opacity=".6"/>
+
+    <!-- Caesar infantry engaged -->
+    <rect x="90" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="117" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO IX</text>
+    <rect x="155" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="182" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO VIII</text>
+    <rect x="220" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="247" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XI</text>
+    <rect x="285" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="312" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XII</text>
+    <rect x="350" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="377" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVII</text>
+    <rect x="415" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="442" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XXVIII</text>
+    <rect x="480" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="507" y="256" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO XIII</text>
+    <rect x="545" y="242" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".95"/>
+    <text x="572" y="256" fill="#ee5533" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO X</text>
+
+    <!-- Pompey cavalry SWEEPING around — near left flank now -->
+    <ellipse cx="75" cy="245" rx="40" ry="18" fill="#030c20" stroke="#1a5fc8" stroke-width="1.8" opacity=".85"/>
+    <text x="75" y="243" fill="#3a80d8" font-size="7" font-family="Cinzel,serif" text-anchor="middle">EQUIT.</text>
+    <text x="75" y="254" fill="#2a60b8" font-size="6" font-family="Cinzel,serif" text-anchor="middle">LABIENVS</text>
+    <!-- Cavalry encirclement arrow -->
+    <path d="M 100,250 Q 100,270 130,280 Q 160,286 200,284" fill="none" stroke="#1a5fc8" stroke-width="2" opacity=".7" marker-end="url(#arr-p)"/>
+
+    <!-- SECRET RESERVE COHORTS WHEELING AND CHARGING CAVALRY -->
+    <!-- Now visible, charging northeast at cavalry -->
+    <rect x="620" y="220" width="55" height="20" rx="2" fill="#500800" stroke="#ff3300" stroke-width="2" opacity=".95" filter="url(#glow-red)" transform="rotate(-30,647,230)"/>
+    <text x="647" y="233" fill="#ff6644" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-weight="bold" transform="rotate(-30,647,230)">VI COH.</text>
+    <!-- Charge arrow at Pompey cavalry -->
+    <path d="M 620,225 Q 590,222 560,230 Q 530,238 510,248" fill="none" stroke="#cc2200" stroke-width="3" opacity=".9" marker-end="url(#arr-c)"/>
+    <!-- Golden annotation -->
+    <text x="590" y="210" fill="#c8a050" font-size="8.5" font-family="Cinzel,serif" text-anchor="middle" letter-spacing=".08em" filter="url(#glow-gold)">PETE VVLTVS !</text>
+    <text x="590" y="221" fill="#8a6030" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">"Aim for the faces!"</text>
+
+    <!-- Caesar command with glow -->
+    <circle cx="340" cy="232" r="6" fill="#cc2200" opacity=".9" filter="url(#glow-red)"/>
+    <text x="340" y="224" fill="#c8a050" font-size="9" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+
+    <!-- Pompey command (north, anxious) -->
+    <circle cx="430" cy="200" r="5" fill="#1a5fc8" opacity=".7" filter="url(#glow-blue)"/>
+    <text x="430" y="192" fill="#c8d8f8" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">P</text>
+    `
+  },
+
+  // ── STAGE 5 ──────────────────────────────────────────────
+  {
+    num: 'STAGE V',
+    title: 'The Cavalry Routs — Pompey\'s Flank Exposed',
+    desc: 'The Pompeian cavalry — men who had never faced infantry in an oblique counter-charge — panics and breaks. The thousands of allied cavalrymen flood northward toward the hills, abandoning Pompey\'s flank entirely. Caesar\'s 6 cohorts now wheel to strike the exposed left flank and rear of Pompey\'s infantry. Simultaneously, Caesar releases his third line of legions — fresh men who have not yet fought — to press the front. Pompey\'s men are being struck from two directions. The battle\'s outcome is no longer in doubt.',
+
+    svg: `
+    <!-- Pompey FLEEING CAVALRY — scattered north toward hills -->
+    <!-- Routing cavalry arrows -->
+    <path d="M 120,195 Q 150,140 200,100 Q 240,70 280,50" fill="none" stroke="#1a5fc8" stroke-width="1.5" opacity=".4" marker-end="url(#arr-p)" stroke-dasharray="5,4"/>
+    <path d="M 80,200 Q 100,155 130,115 Q 160,80 200,55" fill="none" stroke="#1a5fc8" stroke-width="1.2" opacity=".3" marker-end="url(#arr-p)" stroke-dasharray="4,5"/>
+    <!-- Scattered cavalry symbols (routing) -->
+    <ellipse cx="180" cy="115" rx="22" ry="10" fill="#030c20" stroke="#1a5fc8" stroke-width=".8" opacity=".4"/>
+    <text x="180" y="118" fill="#1a4080" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">fuga!</text>
+    <ellipse cx="130" cy="80" rx="18" ry="9" fill="#030c20" stroke="#1a5fc8" stroke-width=".6" opacity=".3"/>
+    <text x="260" y="75" fill="#1a3060" font-size="6" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">fuga!</text>
+
+    <!-- Pompey line — NOW BEING ENCIRCLED, crumbling right flank -->
+    <text x="350" y="188" fill="#1a5fc8" font-size="8.5" font-family="Cinzel,serif" letter-spacing=".06em" text-anchor="middle" opacity=".8">POMPEIVS — FLANKED · LATUS APERTUM</text>
+    <rect x="90" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="160" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="230" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="300" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".85"/>
+    <rect x="370" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".75"/>
+    <rect x="440" y="207" width="60" height="22" rx="2" fill="#030818" stroke="#1a5fc8" stroke-width="1.2" opacity=".65"/>
+    <!-- Right flank now shattered (crumbling) -->
+    <rect x="510" y="204" width="55" height="22" rx="2" fill="#030818" stroke="#2a2a60" stroke-width="1" opacity=".4"/>
+    <text x="537" y="218" fill="#1a2050" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">disrupt.</text>
+
+    <!-- Clash line -->
+    <path d="M 90,229 L 110,235 L 130,229 L 150,235 L 170,229 L 190,235 L 210,229 L 230,235 L 250,229 L 270,235 L 290,229 L 310,235 L 330,229 L 350,235 L 370,229 L 390,235 L 410,229 L 430,235 L 450,229 L 470,235 L 490,229"
+          fill="none" stroke="#8a3010" stroke-width="1.5" opacity=".7"/>
+
+    <!-- Caesar front line pressing -->
+    <rect x="90" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <text x="117" y="251" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">LEGIO IX</text>
+    <rect x="155" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="220" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="285" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="350" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="415" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="480" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="545" y="237" width="55" height="22" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".95"/>
+
+    <!-- CAESAR'S THIRD LINE fresh troops advancing from reserve -->
+    <text x="280" y="278" fill="#cc2200" font-size="8" font-family="Cinzel,serif" text-anchor="middle" font-style="italic" letter-spacing=".08em">— tertia acies immissa —</text>
+    <rect x="90" y="282" width="55" height="18" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <text x="117" y="293" fill="#cc4422" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">ACIES III</text>
+    <rect x="155" y="282" width="55" height="18" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="220" y="282" width="55" height="18" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="285" y="282" width="55" height="18" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="350" y="282" width="55" height="18" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <line x1="280" y1="280" x2="280" y2="260" stroke="#cc2200" stroke-width="1.2" marker-end="url(#arr-c)" stroke-dasharray="3,2" opacity=".5"/>
+    <line x1="180" y1="280" x2="180" y2="260" stroke="#cc2200" stroke-width="1.2" marker-end="url(#arr-c)" stroke-dasharray="3,2" opacity=".5"/>
+
+    <!-- The 6 cohorts hitting Pompey's flank from north-east -->
+    <rect x="530" y="196" width="60" height="20" rx="2" fill="#500800" stroke="#ff3300" stroke-width="2" opacity=".95" filter="url(#glow-red)"/>
+    <text x="560" y="208" fill="#ff6644" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-weight="bold">VI COH.</text>
+    <!-- Striking into Pompey's flank -->
+    <path d="M 530,208 Q 510,210 492,215" fill="none" stroke="#cc2200" stroke-width="2.5" opacity=".9" marker-end="url(#arr-c)"/>
+
+    <!-- Pompey command — fleeing north? -->
+    <circle cx="450" cy="196" r="5" fill="#1a5fc8" opacity=".5"/>
+    <text x="450" y="188" fill="#8090b8" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">P</text>
+    <text x="450" y="182" fill="#3a4060" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">Pompeius ad castra...</text>
+
+    <!-- Caesar command — pressing forward -->
+    <circle cx="310" cy="226" r="6" fill="#cc2200" opacity=".9" filter="url(#glow-red)"/>
+    <text x="310" y="218" fill="#c8a050" font-size="9" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+    `
+  },
+
+  // ── STAGE 6 ──────────────────────────────────────────────
+  {
+    num: 'STAGE VI',
+    title: 'Pompey Abandons His Army',
+    desc: 'Seeing his cavalry routed and his right flank crumbling, Pompey the Great — who had not lost a battle in 30 years — loses his nerve entirely. He rides back to his camp, enters his tent, and sits in silence. When Caesar\'s troops begin to storm the camp ramparts, Pompey removes his general\'s cloak, flees through the back, and rides for the Thessalian coast. He abandons 47,000 soldiers still fighting on the field. Caesar\'s men, seeing the enemy commander flee, press with savage energy into the broken Pompeian lines.',
+
+    svg: `
+    <!-- Pompey's army — COLLAPSING, fragmenting -->
+    <text x="350" y="185" fill="#1a3060" font-size="9" font-family="Cinzel,serif" letter-spacing=".08em" text-anchor="middle" opacity=".7">POMPEIVS FUGIT — EXERCITVS DERELICTVS</text>
+
+    <!-- Remaining Pompey infantry — broken, some routing -->
+    <rect x="90" y="205" width="55" height="20" rx="2" fill="#030818" stroke="#1a3060" stroke-width="1" opacity=".6"/>
+    <rect x="155" y="205" width="55" height="20" rx="2" fill="#030818" stroke="#1a3060" stroke-width="1" opacity=".55"/>
+    <rect x="220" y="202" width="55" height="20" rx="2" fill="#030818" stroke="#1a3060" stroke-width=".8" opacity=".45"/>
+    <rect x="285" y="200" width="55" height="20" rx="2" fill="#030818" stroke="#1a3060" stroke-width=".8" opacity=".35"/>
+    <!-- Right side routing -->
+    <text x="380" y="210" fill="#1a2548" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">fuga — fuga!</text>
+    <text x="460" y="210" fill="#1a2548" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">dispersi!</text>
+
+    <!-- Routing arrows (Pompeians fleeing north/northeast) -->
+    <line x1="370" y1="205" x2="400" y2="170" stroke="#1a3060" stroke-width="1.2" opacity=".4" marker-end="url(#arr-p)" stroke-dasharray="4,4"/>
+    <line x1="450" y1="205" x2="490" y2="165" stroke="#1a3060" stroke-width="1.2" opacity=".35" marker-end="url(#arr-p)" stroke-dasharray="4,4"/>
+    <line x1="520" y1="203" x2="570" y2="160" stroke="#1a3060" stroke-width="1" opacity=".3" marker-end="url(#arr-p)" stroke-dasharray="4,4"/>
+
+    <!-- POMPEY FLEEING — special indicator -->
+    <path d="M 660,100 Q 700,80 750,60 Q 800,42 860,30" fill="none" stroke="#1a5fc8" stroke-width="2" opacity=".6" stroke-dasharray="6,4" marker-end="url(#arr-p)"/>
+    <text x="740" y="52" fill="#2a5090" font-size="8" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">Pompeius fugit</text>
+    <text x="740" y="62" fill="#1a3060" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">ad Larissam...</text>
+    <!-- Pompey camp being assaulted -->
+    <rect x="658" y="80" width="50" height="36" rx="2" fill="#050810" stroke="#cc2200" stroke-width="1.5"/>
+    <text x="683" y="97" fill="#cc4422" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">CASTRA</text>
+    <text x="683" y="108" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">PETUNTUR</text>
+
+    <!-- Caesar assault on camp -->
+    <path d="M 620,215 Q 640,165 660,120 Q 668,105 670,92" fill="none" stroke="#cc2200" stroke-width="2" opacity=".7" marker-end="url(#arr-c)"/>
+    <text x="598" y="160" fill="#cc3311" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">ad castra!</text>
+
+    <!-- Caesar infantry ADVANCING — front and flanking -->
+    <text x="350" y="236" fill="#cc2200" font-size="9" font-family="Cinzel,serif" letter-spacing=".08em" text-anchor="middle">CAESAR — VICTORIA INSTAT</text>
+    <rect x="90" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="155" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="220" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="285" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="350" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="415" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".9"/>
+    <rect x="480" y="242" width="55" height="20" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.4" opacity=".9"/>
+    <!-- 6 cohorts swinging around -->
+    <rect x="510" y="185" width="55" height="20" rx="2" fill="#500800" stroke="#ff3300" stroke-width="2" opacity=".9" filter="url(#glow-red)"/>
+    <text x="537" y="198" fill="#ff6644" font-size="7" font-family="Cinzel,serif" text-anchor="middle">VI COH.</text>
+    <!-- Third line following up -->
+    <rect x="90" y="268" width="55" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".85"/>
+    <rect x="155" y="268" width="55" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".85"/>
+    <rect x="220" y="268" width="55" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".85"/>
+    <rect x="285" y="268" width="55" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".85"/>
+    <!-- Advance arrows -->
+    <line x1="200" y1="265" x2="200" y2="248" stroke="#cc2200" stroke-width="1" marker-end="url(#arr-c)" opacity=".5" stroke-dasharray="3,2"/>
+    <line x1="350" y1="265" x2="350" y2="248" stroke="#cc2200" stroke-width="1" marker-end="url(#arr-c)" opacity=".5" stroke-dasharray="3,2"/>
+
+    <!-- Caesar command — triumphant -->
+    <circle cx="300" cy="230" r="7" fill="#cc2200" opacity=".95" filter="url(#glow-red)"/>
+    <text x="300" y="222" fill="#c8a050" font-size="9" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+    `
+  },
+
+  // ── STAGE 7 ──────────────────────────────────────────────
+  {
+    num: 'STAGE VII',
+    title: 'The Camp Stormed — Mass Surrender',
+    desc: 'Caesar\'s legions storm Pompey\'s fortified camp. Despite desperate resistance from the Thracian garrison left behind, the ramparts are breached. The defeated Pompeian infantry — abandoned by their general — stream to the nearby hills and raise branches as tokens of surrender. Caesar, in a moment that would define his legend, orders his men to spare all Romans who surrender. He reportedly says: "Let this be the end of war." Some 24,000 prisoners are taken. The dead lie in their thousands on the plain. Pompey\'s dream of ruling Rome dies here.',
+
+    svg: `
+    <!-- POMPEY'S CAMP — STORMED, breached -->
+    <rect x="655" y="77" width="56" height="40" rx="2" fill="#050810" stroke="#cc2200" stroke-width="2" opacity=".9"/>
+    <!-- Breach in north wall -->
+    <line x1="668" y1="77" x2="688" y2="77" stroke="#cc2200" stroke-width="3" opacity=".0"/>
+    <path d="M 668,77 L 678,68 L 688,77" fill="none" stroke="#cc2200" stroke-width="2" opacity=".8"/>
+    <text x="683" y="95" fill="#cc4422" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">CASTRA</text>
+    <text x="683" y="106" fill="#cc4422" font-size="7" font-family="Cinzel,serif" text-anchor="middle">CAPTA!</text>
+
+    <!-- Caesar assault troops in camp -->
+    <ellipse cx="683" cy="110" rx="20" ry="9" fill="#400800" stroke="#cc2200" stroke-width="1.5" opacity=".8"/>
+    <text x="683" y="113" fill="#cc3311" font-size="6.5" font-family="Cinzel,serif" text-anchor="middle">CAES.</text>
+
+    <!-- Pompeians routing to hills (northeast) with surrender branches -->
+    <path d="M 400,200 Q 450,160 500,130 Q 540,108 580,90" fill="none" stroke="#1a3060" stroke-width="1.5" opacity=".4" marker-end="url(#arr-r)" stroke-dasharray="5,4"/>
+    <path d="M 300,200 Q 340,168 380,145 Q 415,126 455,112" fill="none" stroke="#1a3060" stroke-width="1.5" opacity=".4" marker-end="url(#arr-r)" stroke-dasharray="5,4"/>
+    <path d="M 200,202 Q 230,172 265,150 Q 295,132 330,118" fill="none" stroke="#1a3060" stroke-width="1.5" opacity=".4" marker-end="url(#arr-r)" stroke-dasharray="5,4"/>
+
+    <!-- Surrender groups on the hills -->
+    <text x="480" y="108" fill="#1a3560" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">✶ deditio</text>
+    <text x="340" y="115" fill="#1a3560" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">✶ deditio</text>
+    <text x="220" y="140" fill="#1a3560" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">✶ deditio</text>
+
+    <!-- Remaining Pompeian fragments -->
+    <rect x="90" y="198" width="45" height="18" rx="2" fill="#030818" stroke="#1a3060" stroke-width=".8" opacity=".35"/>
+    <rect x="145" y="198" width="45" height="18" rx="2" fill="#030818" stroke="#1a3060" stroke-width=".8" opacity=".25"/>
+
+    <!-- CAESAR'S FULL LINE — victorious -->
+    <text x="330" y="230" fill="#cc2200" font-size="10" font-family="Cinzel,serif" letter-spacing=".12em" text-anchor="middle" filter="url(#glow-red)">VICTORIA CAESARIS</text>
+    <rect x="90" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="150" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="210" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="270" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="330" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="390" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <rect x="450" y="236" width="50" height="19" rx="2" fill="#3a0800" stroke="#cc2200" stroke-width="1.2" opacity=".9"/>
+    <!-- 6 cohorts -->
+    <rect x="510" y="180" width="55" height="19" rx="2" fill="#500800" stroke="#ff3300" stroke-width="2" opacity=".9"/>
+    <text x="537" y="192" fill="#ff6644" font-size="7" font-family="Cinzel,serif" text-anchor="middle">VI COH.</text>
+    <!-- Third line -->
+    <rect x="90" y="262" width="50" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="150" y="262" width="50" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="210" y="262" width="50" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+    <rect x="270" y="262" width="50" height="17" rx="2" fill="#501000" stroke="#cc4422" stroke-width="1.2" opacity=".8"/>
+
+    <!-- Dead on the field -->
+    <text x="380" y="260" fill="#3a1808" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">XV,000 necati</text>
+    <text x="380" y="270" fill="#2a1205" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">XXIV,000 capti</text>
+
+    <!-- Caesar command — triumphant -->
+    <circle cx="310" cy="224" r="7" fill="#cc2200" opacity=".95" filter="url(#glow-red)"/>
+    <text x="310" y="216" fill="#c8a050" font-size="9" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+
+    <!-- FINAL QUOTE -->
+    <text x="500" y="480" fill="#3a3020" font-size="8.5" font-family="IM Fell English,serif" text-anchor="middle" font-style="italic">"Hoc voluerunt" — Caesar on the battlefield, surveying the dead</text>
+    <text x="500" y="492" fill="#2a2018" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">"This is what they wanted." — They drove me to it.</text>
+    `
+  },
+
+  // ── STAGE 8 ──────────────────────────────────────────────
+  {
+    num: 'EPILOGVS',
+    title: 'Aftermath — Pompey Flees to Egypt',
+    desc: 'Pompey rides to Larissa, then the coast, picks up his wife Cornelia, and sails south — to Cyprus, then Egypt — hoping Ptolemy XIII will give him refuge. Instead, on 28 September 48 BC, as he steps off the boat, he is stabbed to death by a former officer in Roman service. His head is cut off and pickled to be presented to Caesar. When Caesar arrives in Egypt days later and is shown the head of his former ally and son-in-law, he turns away and weeps. The Civil War continues — but Pharsalus broke the Republic\'s last champion. Caesar is master of Rome.',
+
+    svg: `
+    <!-- Full aftermath — quiet battlefield -->
+    <!-- Dead scattered on field -->
+    <text x="350" y="220" fill="#2a1808" font-size="8" font-family="IM Fell English,serif" text-anchor="middle" font-style="italic">campos Pharsalicos strage repletos...</text>
+
+    <!-- Caesar's camp — fortified, victorious -->
+    <rect x="58" y="390" width="50" height="36" rx="2" fill="#100504" stroke="#cc2200" stroke-width="1.5"/>
+    <text x="83" y="407" fill="#cc2200" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">CASTRA</text>
+    <text x="83" y="418" fill="#cc2200" font-size="7" font-family="Cinzel,serif" text-anchor="middle">VICTOIIS</text>
+
+    <!-- Pompey's destroyed camp -->
+    <rect x="655" y="77" width="56" height="40" rx="2" fill="#030408" stroke="#2a2520" stroke-width="1" opacity=".6"/>
+    <text x="683" y="95" fill="#2a2520" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">CASTRA</text>
+    <text x="683" y="106" fill="#2a2520" font-size="7" font-family="Cinzel,serif" text-anchor="middle">DIRUTA</text>
+
+    <!-- Pompey's flight route — south to sea -->
+    <path d="M 700,98 Q 750,130 800,170 Q 840,200 870,240 Q 890,270 895,310 Q 898,340 895,370 Q 890,400 880,430 Q 870,460 860,500 Q 850,530 840,565" fill="none" stroke="#1a3060" stroke-width="1.5" opacity=".5" stroke-dasharray="6,5" marker-end="url(#arr-p)"/>
+    <text x="920" y="200" fill="#1a3060" font-size="8" font-family="Cinzel,serif" text-anchor="middle" font-style="italic" transform="rotate(15,920,200)">Pompeius</text>
+    <text x="920" y="212" fill="#1a2848" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic" transform="rotate(15,920,212)">ad Aegyptum</text>
+
+    <!-- Pompey death marker far south -->
+    <circle cx="855" cy="565" r="8" fill="#030818" stroke="#1a3060" stroke-width="1.5" opacity=".8"/>
+    <text x="855" y="569" fill="#1a3060" font-size="8" font-family="Cinzel Decorative,serif" text-anchor="middle">✝</text>
+    <text x="855" y="552" fill="#1a3060" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">† Pelusium</text>
+    <text x="855" y="542" fill="#0d1e30" font-size="7" font-family="Cinzel,serif" text-anchor="middle" font-style="italic">28 Sept. 48 BC</text>
+
+    <!-- Caesar victorious lines -->
+    <text x="330" y="245" fill="#cc2200" font-size="11" font-family="Cinzel",serif letter-spacing=".18em" text-anchor="middle" filter="url(#glow-red)" opacity=".9">CAESAR · DICTATOR</text>
+    <!-- Caesar's army dispersed/in camp -->
+    <rect x="90" y="258" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" opacity=".6"/>
+    <rect x="150" y="258" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" opacity=".6"/>
+    <rect x="210" y="258" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" opacity=".6"/>
+    <rect x="270" y="258" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" opacity=".6"/>
+    <rect x="330" y="258" width="50" height="18" rx="2" fill="#200500" stroke="#882200" stroke-width="1" opacity=".6"/>
+
+    <!-- Stat box -->
+    <rect x="30" y="165" width="190" height="128" rx="4" fill="#060504" stroke="#1e1c10" stroke-width="1"/>
+    <text x="125" y="182" fill="#c8a050" font-size="9" font-family="Cinzel,serif" text-anchor="middle" letter-spacing=".12em">COMPVTATIO FINALIS</text>
+    <line x1="40" y1="187" x2="210" y2="187" stroke="#1e1c10" stroke-width=".8"/>
+    <text x="40" y="200" fill="#4a3820" font-size="8" font-family="Cinzel,serif">CAESAR :</text>
+    <text x="40" y="214" fill="#4a3020" font-size="7.5" font-family="Cinzel,serif">  Mortui ·· ~200</text>
+    <text x="40" y="226" fill="#4a3020" font-size="7.5" font-family="Cinzel,serif">  Vulnerati ·· ~6,000</text>
+    <line x1="40" y1="232" x2="210" y2="232" stroke="#1e1c10" stroke-width=".6"/>
+    <text x="40" y="244" fill="#1e2a4a" font-size="8" font-family="Cinzel,serif">POMPEIVS :</text>
+    <text x="40" y="257" fill="#1e2a4a" font-size="7.5" font-family="Cinzel,serif">  Mortui ·· ~15,000</text>
+    <text x="40" y="269" fill="#1e2a4a" font-size="7.5" font-family="Cinzel,serif">  Capti ·· ~24,000</text>
+    <text x="40" y="281" fill="#1e2a4a" font-size="7.5" font-family="Cinzel,serif">  Fugit ·· Pompeius</text>
+
+    <!-- Great quote -->
+    <text x="500" y="470" fill="#3a3020" font-size="9" font-family="IM Fell English,serif" text-anchor="middle" font-style="italic">"Hoc voluerunt; tantis rebus gestis Gaius Caesar condemnatus essem"</text>
+    <text x="500" y="484" fill="#2a2218" font-size="8" font-family="Cinzel,serif" text-anchor="middle">"This is what they wanted; after all I had done, I would have been condemned."</text>
+    <text x="500" y="496" fill="#2a2018" font-size="7.5" font-family="Cinzel,serif" text-anchor="middle">— C. IVLIVS CAESAR, surveying the dead at Pharsalus</text>
+
+    <!-- Caesar command -->
+    <circle cx="330" cy="232" r="7" fill="#cc2200" opacity=".9" filter="url(#glow-red)"/>
+    <text x="330" y="224" fill="#c8a050" font-size="9" font-family="Cinzel Decorative,serif" text-anchor="middle">C</text>
+    `
+  }
+
+];
+
+let current = 0;
+
+function render(idx) {
+  const s = STAGES[idx];
+  document.getElementById('stage-layer').innerHTML = `<g class="fade-in">${s.svg}</g>`;
+  document.getElementById('info-num').textContent = s.num;
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-desc').textContent = s.desc;
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = idx === STAGES.length - 1;
+  document.getElementById('btn-next').textContent = idx === STAGES.length - 1 ? 'FINIS' : 'ADVANCE ›';
+  // Update stage bar
+  document.querySelectorAll('.stg-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
+}
+
+function nextStage() { if (current < STAGES.length-1) { current++; render(current); } }
+function prevStage() { if (current > 0) { current--; render(current); } }
+
+// Build stage bar
+const sb = document.getElementById('stagebar');
+STAGES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'stg-btn' + (i===0?' active':'');
+  b.innerHTML = `<span class="stg-num">${String(i+1).padStart(2,'0')}</span>${s.title}`;
+  b.onclick = () => { current = i; render(i); };
+  sb.appendChild(b);
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextStage(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevStage(); }
+});
+
+render(0);
+</script>
+</body>
+</html>
