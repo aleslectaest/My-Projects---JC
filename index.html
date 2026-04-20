@@ -3,121 +3,99 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SPQR Campaign Command Map</title>
+<title>SPQR Campaign Archive</title>
 
 <style>
     body {
         margin: 0;
-        background-color: #0a0a0a;
-        font-family: "Arial", sans-serif;
+        background-color: #0b0b0b;
         color: #e6e6e6;
-        overflow-x: hidden;
-    }
-
-    /* Background Europe silhouette */
-    .background-map {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Europe_location_map.svg/2000px-Europe_location_map.svg.png");
-        background-size: cover;
-        background-position: center;
-        opacity: 0.08;
-        filter: grayscale(100%) contrast(1.2);
-        z-index: -2;
-    }
-
-    /* Dark overlay for war-room tone */
-    .overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at center, rgba(0,0,0,0.2), rgba(0,0,0,0.95));
-        z-index: -1;
+        font-family: Arial, sans-serif;
     }
 
     /* Header */
     .header {
         padding: 20px;
-        font-size: 22px;
+        font-size: 20px;
         letter-spacing: 2px;
         border-bottom: 1px solid #222;
-        background: rgba(0,0,0,0.7);
     }
 
     .header span {
-        color: #8b0000; /* SPQR red */
+        color: #8b0000;
         font-weight: bold;
     }
 
-    /* Grid layout */
-    .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 18px;
-        padding: 20px;
+    /* Layout */
+    .container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 25px;
+        max-width: 800px;
+        margin: auto;
     }
 
-    .panel {
-        background: rgba(15, 15, 15, 0.85);
+    /* Project link cards */
+    .card {
+        display: block;
+        text-decoration: none;
+        color: #e6e6e6;
+        background: #111;
         border: 1px solid #2a2a2a;
-        border-left: 3px solid #8b0000;
-        padding: 12px;
-        min-height: 420px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.6);
+        border-left: 4px solid #8b0000;
+        padding: 18px;
+        transition: 0.2s ease;
     }
 
-    .panel h3 {
-        margin: 0 0 10px 0;
+    .card:hover {
+        background: #161616;
+        transform: translateX(5px);
+        border-left: 4px solid #ff1a1a;
+    }
+
+    .title {
+        font-size: 16px;
+        margin-bottom: 6px;
+        color: #ffffff;
+    }
+
+    .desc {
         font-size: 13px;
+        color: #aaa;
+    }
+
+    .tag {
+        margin-top: 10px;
+        font-size: 11px;
         color: #8b0000;
-        text-transform: uppercase;
         letter-spacing: 1px;
-    }
-
-    iframe {
-        width: 100%;
-        height: 380px;
-        border: none;
-        filter: contrast(1.1) brightness(0.95);
-    }
-
-    /* SPQR accent line */
-    .top-bar {
-        height: 3px;
-        background: linear-gradient(90deg, #000, #8b0000, #000);
+        text-transform: uppercase;
     }
 </style>
 </head>
 
 <body>
 
-<div class="background-map"></div>
-<div class="overlay"></div>
-
-<div class="top-bar"></div>
-
 <div class="header">
-    <span>SPQR</span> CAMPAIGN COMMAND INTERFACE
+    <span>SPQR</span> CAMPAIGN ARCHIVE
 </div>
 
-<div class="grid">
+<div class="container">
 
-    <!-- Caesar's Gallic Wars -->
-    <div class="panel">
-        <h3>Gallic Wars Campaign Map (Caesar)</h3>
-        <iframe src="caesars_gallic_wars_campaign_map.html"></iframe>
-    </div>
+    <!-- Project 1 -->
+    <a class="card" href="caesars_gallic_wars_campaign_map.html" target="_blank">
+        <div class="title">Caesar’s Gallic Wars Campaign Map</div>
+        <div class="desc">Operational overview of Roman expansion in Gaul under Julius Caesar.</div>
+        <div class="tag">Open Full Screen →</div>
+    </a>
 
-    <!-- Battle of Pharsalus -->
-    <div class="panel">
-        <h3>Battle of Pharsalus</h3>
-        <iframe src="battle_of_pharsalus.html"></iframe>
-    </div>
+    <!-- Project 2 -->
+    <a class="card" href="battle_of_pharsalus.html" target="_blank">
+        <div class="title">Battle of Pharsalus</div>
+        <div class="desc">Tactical breakdown of Caesar vs Pompey during the decisive civil war engagement.</div>
+        <div class="tag">Open Full Screen →</div>
+    </a>
 
 </div>
 
