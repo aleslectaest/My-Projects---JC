@@ -8,33 +8,63 @@
 <style>
     body {
         margin: 0;
-        font-family: "Arial", sans-serif;
+        font-family: Arial, sans-serif;
         background: radial-gradient(circle at center, #151515, #050505);
         color: #e6e6e6;
         overflow: hidden;
     }
 
-    /* subtle map texture overlay */
+    /* Europe faint background */
     body::before {
         content: "";
         position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        width: 100%;
+        height: 100%;
         background: url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Europe_location_map.svg/2000px-Europe_location_map.svg.png");
         background-size: cover;
-        opacity: 0.06;
+        opacity: 0.05;
         filter: grayscale(100%);
         z-index: 0;
     }
 
-    /* top title */
+    /* 🦅 ROMAN EAGLE (AQUILA) BACKGROUND */
+    .eagle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 520px;
+        height: 520px;
+        background: url("https://upload.wikimedia.org/wikipedia/commons/5/5a/Roman_Eagle_Standard.svg");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.08;
+        filter: drop-shadow(0 0 25px rgba(139,0,0,0.5));
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* red glow behind eagle */
+    .eagle-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(circle, rgba(139,0,0,0.25), transparent 60%);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* Title */
     .title {
         position: relative;
         text-align: center;
         padding-top: 40px;
         font-size: 28px;
         letter-spacing: 4px;
-        z-index: 2;
+        z-index: 3;
     }
 
     .title span {
@@ -42,49 +72,46 @@
         font-weight: bold;
     }
 
-    /* subtitle */
     .subtitle {
         text-align: center;
         font-size: 12px;
         color: #aaa;
         margin-top: 8px;
         letter-spacing: 2px;
-        z-index: 2;
         position: relative;
+        z-index: 3;
     }
 
-    /* container */
+    /* Menu layout */
     .menu {
         display: flex;
         justify-content: center;
         gap: 30px;
         margin-top: 80px;
         position: relative;
-        z-index: 2;
+        z-index: 3;
         flex-wrap: wrap;
     }
 
-    /* campaign card */
+    /* Campaign cards */
     .card {
         width: 320px;
         height: 180px;
         background: linear-gradient(135deg, #101010, #0a0a0a);
         border: 1px solid #2a2a2a;
         border-left: 4px solid #8b0000;
-        position: relative;
         cursor: pointer;
         transition: all 0.3s ease;
+        position: relative;
         overflow: hidden;
     }
 
-    /* hover animation (Total War feel) */
     .card:hover {
         transform: translateY(-10px) scale(1.05);
         border-left: 4px solid #ff1a1a;
         box-shadow: 0 0 25px rgba(139, 0, 0, 0.6);
     }
 
-    /* glow sweep animation */
     .card::after {
         content: "";
         position: absolute;
@@ -92,12 +119,7 @@
         left: -60%;
         width: 50%;
         height: 200%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 0, 0, 0.15),
-            transparent
-        );
+        background: linear-gradient(90deg, transparent, rgba(255,0,0,0.15), transparent);
         transform: rotate(25deg);
         transition: 0.5s;
     }
@@ -106,7 +128,6 @@
         left: 120%;
     }
 
-    /* card text */
     .card h2 {
         margin: 20px;
         font-size: 16px;
@@ -118,7 +139,6 @@
         margin: 20px;
         font-size: 12px;
         color: #aaa;
-        line-height: 1.4;
     }
 
     .tag {
@@ -131,7 +151,7 @@
         text-transform: uppercase;
     }
 
-    /* fade-in */
+    /* fade in */
     .card {
         animation: fadeIn 0.8s ease forwards;
         opacity: 0;
@@ -150,6 +170,10 @@
 
 <body>
 
+<!-- Background layers -->
+<div class="eagle-glow"></div>
+<div class="eagle"></div>
+
 <div class="title">
     <span>SPQR</span> CAMPAIGN SELECT
 </div>
@@ -160,24 +184,18 @@
 
 <div class="menu">
 
-    <!-- Gallic Wars -->
     <a href="caesars_gallic_wars_campaign_map.html" target="_blank" style="text-decoration:none;">
         <div class="card">
-            <h2>THE GALLIC WARS</h2>
-            <p>
-                Caesar’s conquest of Gaul. Tribal resistance, sieges, and expansion of Roman dominion.
-            </p>
+            <h2>GALLIC WARS</h2>
+            <p>Caesar’s conquest of Gaul. Tribal resistance and Roman expansion across northern Europe.</p>
             <div class="tag">Enter Campaign →</div>
         </div>
     </a>
 
-    <!-- Pharsalus -->
     <a href="battle_of_pharsalus.html" target="_blank" style="text-decoration:none;">
         <div class="card">
             <h2>BATTLE OF PHARSALUS</h2>
-            <p>
-                Caesar vs Pompey. The decisive engagement that determined control of Rome itself.
-            </p>
+            <p>Caesar vs Pompey. The decisive battle for control of the Roman Republic.</p>
             <div class="tag">Enter Battle →</div>
         </div>
     </a>
