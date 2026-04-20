@@ -3,98 +3,183 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SPQR Campaign Archive</title>
+<title>SPQR Campaign Selection</title>
 
 <style>
     body {
         margin: 0;
-        background-color: #0b0b0b;
+        font-family: "Arial", sans-serif;
+        background: radial-gradient(circle at center, #151515, #050505);
         color: #e6e6e6;
-        font-family: Arial, sans-serif;
+        overflow: hidden;
     }
 
-    /* Header */
-    .header {
-        padding: 20px;
-        font-size: 20px;
-        letter-spacing: 2px;
-        border-bottom: 1px solid #222;
+    /* subtle map texture overlay */
+    body::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Europe_location_map.svg/2000px-Europe_location_map.svg.png");
+        background-size: cover;
+        opacity: 0.06;
+        filter: grayscale(100%);
+        z-index: 0;
     }
 
-    .header span {
+    /* top title */
+    .title {
+        position: relative;
+        text-align: center;
+        padding-top: 40px;
+        font-size: 28px;
+        letter-spacing: 4px;
+        z-index: 2;
+    }
+
+    .title span {
         color: #8b0000;
         font-weight: bold;
     }
 
-    /* Layout */
-    .container {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        padding: 25px;
-        max-width: 800px;
-        margin: auto;
+    /* subtitle */
+    .subtitle {
+        text-align: center;
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 8px;
+        letter-spacing: 2px;
+        z-index: 2;
+        position: relative;
     }
 
-    /* Project link cards */
+    /* container */
+    .menu {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 80px;
+        position: relative;
+        z-index: 2;
+        flex-wrap: wrap;
+    }
+
+    /* campaign card */
     .card {
-        display: block;
-        text-decoration: none;
-        color: #e6e6e6;
-        background: #111;
+        width: 320px;
+        height: 180px;
+        background: linear-gradient(135deg, #101010, #0a0a0a);
         border: 1px solid #2a2a2a;
         border-left: 4px solid #8b0000;
-        padding: 18px;
-        transition: 0.2s ease;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
     }
 
+    /* hover animation (Total War feel) */
     .card:hover {
-        background: #161616;
-        transform: translateX(5px);
+        transform: translateY(-10px) scale(1.05);
         border-left: 4px solid #ff1a1a;
+        box-shadow: 0 0 25px rgba(139, 0, 0, 0.6);
     }
 
-    .title {
+    /* glow sweep animation */
+    .card::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 0, 0, 0.15),
+            transparent
+        );
+        transform: rotate(25deg);
+        transition: 0.5s;
+    }
+
+    .card:hover::after {
+        left: 120%;
+    }
+
+    /* card text */
+    .card h2 {
+        margin: 20px;
         font-size: 16px;
-        margin-bottom: 6px;
-        color: #ffffff;
+        color: #fff;
+        letter-spacing: 1px;
     }
 
-    .desc {
-        font-size: 13px;
+    .card p {
+        margin: 20px;
+        font-size: 12px;
         color: #aaa;
+        line-height: 1.4;
     }
 
     .tag {
-        margin-top: 10px;
+        position: absolute;
+        bottom: 15px;
+        left: 20px;
         font-size: 11px;
         color: #8b0000;
         letter-spacing: 1px;
         text-transform: uppercase;
     }
+
+    /* fade-in */
+    .card {
+        animation: fadeIn 0.8s ease forwards;
+        opacity: 0;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.2s; }
+    .card:nth-child(2) { animation-delay: 0.4s; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <span>SPQR</span> CAMPAIGN ARCHIVE
+<div class="title">
+    <span>SPQR</span> CAMPAIGN SELECT
 </div>
 
-<div class="container">
+<div class="subtitle">
+    Select a historical theater of war
+</div>
 
-    <!-- Project 1 -->
-    <a class="card" href="caesars_gallic_wars_campaign_map.html" target="_blank">
-        <div class="title">Caesar’s Gallic Wars Campaign Map</div>
-        <div class="desc">Operational overview of Roman expansion in Gaul under Julius Caesar.</div>
-        <div class="tag">Open Full Screen →</div>
+<div class="menu">
+
+    <!-- Gallic Wars -->
+    <a href="caesars_gallic_wars_campaign_map.html" target="_blank" style="text-decoration:none;">
+        <div class="card">
+            <h2>GAUL CAMPAIGN</h2>
+            <p>
+                Caesar’s conquest of Gaul. Tribal resistance, sieges, and expansion of Roman dominion.
+            </p>
+            <div class="tag">Enter Campaign →</div>
+        </div>
     </a>
 
-    <!-- Project 2 -->
-    <a class="card" href="battle_of_pharsalus.html" target="_blank">
-        <div class="title">Battle of Pharsalus</div>
-        <div class="desc">Tactical breakdown of Caesar vs Pompey during the decisive civil war engagement.</div>
-        <div class="tag">Open Full Screen →</div>
+    <!-- Pharsalus -->
+    <a href="battle_of_pharsalus.html" target="_blank" style="text-decoration:none;">
+        <div class="card">
+            <h2>CIVIL WAR</h2>
+            <p>
+                Caesar vs Pompey. The decisive engagement that determined control of Rome itself.
+            </p>
+            <div class="tag">Enter Battle →</div>
+        </div>
     </a>
 
 </div>
