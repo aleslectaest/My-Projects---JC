@@ -1,0 +1,242 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;font-family:'IBM Plex Sans',sans-serif;color:#e0d8cc}
+#map{width:100%;height:540px;background:#0a0a0a}
+.header{padding:14px 18px 10px;border-bottom:1px solid #1e1e1e;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;letter-spacing:.08em;color:#e0d8cc;text-transform:uppercase}
+.subtitle{font-size:11px;color:#5a5a5a;font-weight:400;letter-spacing:.04em}
+.legend{padding:10px 18px;background:#0a0a0a;border-bottom:1px solid #1a1a1a;display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#888;font-family:'IBM Plex Mono',monospace}
+.leg-line{width:22px;height:2px;background:#c0392b}
+.leg-dot{width:10px;height:10px;border-radius:50%;background:#c0392b;border:1.5px solid #e74c3c}
+.leg-camp{width:10px;height:10px;background:none;border:1.5px solid #7a6a4a}
+.leg-dot-sm{width:8px;height:8px;border-radius:50%;background:#3a3a3a;border:1.5px solid #555}
+.tooltip-panel{padding:12px 18px;background:#0a0a0a;border-top:1px solid #1a1a1a;min-height:70px;transition:all .2s}
+.tp-year{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#c0392b;letter-spacing:.1em;margin-bottom:3px}
+.tp-name{font-size:14px;font-weight:500;color:#e0d8cc;margin-bottom:4px}
+.tp-desc{font-size:11px;color:#888;line-height:1.5;max-width:620px}
+.tp-default{font-size:11px;color:#3a3a3a;font-style:italic}
+.year-filter{padding:8px 18px;background:#0c0c0c;border-bottom:1px solid #1a1a1a;display:flex;gap:6px;flex-wrap:wrap}
+.yr-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;border:1px solid #222;background:none;color:#555;cursor:pointer;border-radius:2px;transition:all .15s;letter-spacing:.05em}
+.yr-btn:hover{border-color:#c0392b;color:#c0392b}
+.yr-btn.active{background:#c0392b;border-color:#c0392b;color:#fff}
+.yr-btn.all-btn{border-color:#333;color:#888}
+.yr-btn.all-btn.active{background:#222;border-color:#888;color:#e0d8cc}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<div class="header">
+  <span class="title">Caesar's Gallic Wars</span>
+  <span class="subtitle">58–50 BC — Campaign routes & major engagements</span>
+</div>
+<div class="year-filter" id="yearFilter"></div>
+<div id="map"></div>
+<div class="legend">
+  <div class="leg-item"><div class="leg-line"></div> Campaign route</div>
+  <div class="leg-item"><div class="leg-dot"></div> Major battle</div>
+  <div class="leg-item"><div style="width:10px;height:10px;background:none;border:1.5px solid #7a6a4a;border-radius:1px"></div> Roman camp / base</div>
+  <div class="leg-item"><div class="leg-dot-sm"></div> Town / location</div>
+</div>
+<div class="tooltip-panel" id="tooltip">
+  <div class="tp-default">Hover over a battle or location to see details</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const campaigns = {
+  58: {
+    color:'#c0392b',
+    routes:[
+      [[46.2,6.1],[46.9,5.4],[47.1,5.0],[47.3,4.6]],
+      [[47.3,4.6],[47.7,4.8],[47.8,5.5],[47.9,6.3],[47.9,7.3]],
+      [[47.9,7.3],[48.3,7.5],[48.5,7.7]]
+    ],
+    battles:[
+      {name:'Battle of the Arar',lat:46.3,lng:4.83,year:58,type:'battle',desc:'Caesar halts the Helvetii migration at the Saône River. Three Helvetian clans are massacred as they cross; 73,000 reportedly killed or captured.'},
+      {name:'Battle of Bibracte',lat:46.88,lng:4.14,year:58,type:'battle',desc:'Decisive Roman victory over the Helvetii. Caesar\'s legions stop the mass Helvetian migration. Survivors are forced to return to their homeland.'},
+      {name:'Battle of Vesontio',lat:47.24,lng:6.02,year:58,type:'camp',desc:'Before engaging Ariovistus, Caesar seizes Vesontio (Besançon) to deny it to the Germans. Caesar addresses his troops to quell their fear of German warriors.'},
+      {name:'Battle of the Vosges',lat:48.5,lng:7.6,year:58,type:'battle',desc:'Caesar defeats Ariovistus and his Germanic Suebi warriors. The Germans are driven back across the Rhine in a rout, ending German expansion into Gaul.'},
+    ]
+  },
+  57: {
+    color:'#c0392b',
+    routes:[
+      [[48.5,7.7],[49.3,4.0],[49.5,3.5],[49.6,3.9],[50.1,3.8],[50.4,4.5]],
+      [[50.4,4.5],[50.3,5.0],[50.2,5.2]],
+      [[50.2,5.2],[49.9,4.7],[49.3,4.0]]
+    ],
+    battles:[
+      {name:'Battle of the Aisne',lat:49.4,lng:3.65,year:57,type:'battle',desc:'Caesar defeats the Belgic confederation near the Aisne River. The Belgian tribes suffer enormous casualties attempting to cross the Aisne under Roman fire.'},
+      {name:'Battle of the Sambre',lat:50.36,lng:4.28,year:57,type:'battle',desc:'Near-disaster against the Nervii. Caesar is nearly overrun but rallies personally; the 12th legion\'s eagle is saved. The Nervii are decimated — allegedly only 600 warriors survive from 60,000.'},
+      {name:'Aduatuca',lat:50.5,lng:5.3,year:57,type:'battle',desc:'Siege of the Aduatuci fortress. After the tribe attempts treachery during surrender negotiations, Caesar enslaves the entire population — reportedly 53,000 people.'},
+    ]
+  },
+  56: {
+    color:'#c0392b',
+    routes:[
+      [[49.3,4.0],[48.1,1.7],[47.8,0.5],[47.4,-1.0],[47.2,-2.0],[47.3,-2.7]],
+      [[47.3,-2.7],[47.7,-2.5],[48.1,-1.8],[48.5,-1.5]]
+    ],
+    battles:[
+      {name:'Battle of the Morbihan',lat:47.55,lng:-2.78,year:56,type:'battle',desc:'Naval battle against the Veneti tribe in Brittany. Rome\'s first major naval battle in the Atlantic. Caesar\'s fleet uses hooks to tear down enemy sails, winning decisively. The Veneti senate is executed.'},
+      {name:'Genabum (Orléans)',lat:47.9,lng:1.9,year:56,type:'camp',desc:'Caesar establishes supply depots for the Atlantic campaign and operations against the Veneti and other Armorican tribes of western Gaul.'},
+    ]
+  },
+  55: {
+    color:'#c0392b',
+    routes:[
+      [[49.3,4.0],[50.9,3.3],[51.1,2.9],[51.2,2.1],[51.1,1.6]],
+      [[51.1,1.6],[51.1,1.1],[50.9,0.5]],
+      [[50.9,3.3],[51.0,4.0],[51.5,5.5],[50.7,6.5]]
+    ],
+    battles:[
+      {name:'First Crossing of the Rhine',lat:50.72,lng:6.65,year:55,type:'camp',desc:'Caesar bridges the Rhine in 10 days — a feat of engineering. He crosses into Germania to intimidate the Germanic tribes, then withdraws after 18 days and destroys the bridge.'},
+      {name:'First Invasion of Britain',lat:51.1,lng:1.6,year:55,type:'battle',desc:'Caesar\'s first reconnaissance in force across the Channel with two legions. Fierce resistance on the beaches from British charioteers. Storms damage the Roman fleet; Caesar withdraws after limited penetration.'},
+      {name:'Battle of the Meuse',lat:50.95,lng:4.35,year:55,type:'battle',desc:'Caesar annihilates the Usipetes and Tencteri Germanic tribes who crossed the Rhine. Alleged atrocity — Caesar reports 430,000 killed including women and children, drawing criticism in Rome.'},
+    ]
+  },
+  54: {
+    color:'#c0392b',
+    routes:[
+      [[50.9,0.5],[51.1,1.1],[51.2,1.6],[51.1,2.1],[51.3,0.5]],
+      [[49.3,4.0],[50.3,5.0],[50.5,5.9],[50.7,6.0]]
+    ],
+    battles:[
+      {name:'Second Invasion of Britain',lat:51.3,lng:0.5,year:54,type:'battle',desc:'Caesar crosses with 5 legions and 2,000 cavalry. He defeats Cassivellaunus and crosses the Thames. Storms again damage ships. Caesar extracts hostages and tribute, then withdraws permanently.'},
+      {name:'Ambush of Sabinus',lat:50.4,lng:5.7,year:54,type:'battle',desc:'Catastrophic ambush by Ambiorix of the Eburones. Legates Sabinus and Cotta and 15 cohorts (~7,500 men) are destroyed in a gorge. One of Rome\'s worst defeats in Gaul.'},
+      {name:'Siege of Quintus Cicero',lat:50.28,lng:4.9,year:54,type:'battle',desc:'Quintus Cicero (brother of the orator) besieged in his winter camp by the Nervii. Caesar makes a rapid march and relieves the camp just in time.'},
+    ]
+  },
+  53: {
+    color:'#c0392b',
+    routes:[
+      [[49.3,4.0],[50.2,5.5],[50.5,6.1],[50.7,6.5]],
+      [[50.7,6.5],[50.3,6.8],[49.8,6.7],[49.3,6.5]],
+      [[49.3,4.0],[48.5,4.5],[48.0,5.0]]
+    ],
+    battles:[
+      {name:'Second Rhine Crossing',lat:49.3,lng:6.5,year:53,type:'camp',desc:'Caesar crosses the Rhine a second time to punish the Suebi and Ubii for supporting Ambiorix. The crossing demonstration suffices; Caesar destroys the bridge behind him again.'},
+      {name:'Destruction of the Eburones',lat:50.5,lng:5.9,year:53,type:'battle',desc:'Caesar systematically devastates the territory of the Eburones, whose chieftain Ambiorix destroyed his legions in 54 BC. The tribe is nearly exterminated.'},
+    ]
+  },
+  52: {
+    color:'#c0392b',
+    routes:[
+      [[45.0,5.9],[45.5,5.4],[45.7,5.0],[46.0,4.4],[46.2,3.5],[46.5,3.1],[46.4,2.5]],
+      [[46.4,2.5],[46.2,2.0],[45.8,2.2],[45.5,2.5],[45.4,2.9],[45.5,3.2],[45.6,3.5]],
+      [[45.6,3.5],[46.0,3.8],[46.5,3.1]]
+    ],
+    battles:[
+      {name:'Battle of Gergovia',lat:45.7,lng:3.15,year:52,type:'battle',desc:'Caesar\'s only significant tactical defeat. Vercingetorix repels a Roman assault on the Arvernian capital. Caesar loses 700 soldiers and 46 centurions. He withdraws northward, morale shaken.'},
+      {name:'Battle of the Vingeanne',lat:47.6,lng:5.55,year:52,type:'battle',desc:'Cavalry engagement in which Vercingetorix attempts to cut Caesar\'s supply lines. Caesar\'s Germanic cavalry counterattack and drive the Gauls from the field.'},
+      {name:'Siege of Alesia',lat:47.54,lng:4.65,year:52,type:'battle',desc:'The decisive battle of the Gallic Wars. Caesar besieges Alesia with a double ring of fortifications — 18 km inner wall, 21 km outer wall. A massive relief army of ~250,000 fails to break through. Vercingetorix surrenders. Gaul is conquered.'},
+      {name:'Noviodunum (Nevers)',lat:46.98,lng:3.15,year:52,type:'camp',desc:'Caesar\'s main supply depot, burned by the Gauls under Vercingetorix who also destroys 20 adjacent Aeduian towns to deny resources to Rome.'},
+    ]
+  },
+  51: {
+    color:'#c0392b',
+    routes:[
+      [[47.54,4.65],[47.9,1.9],[48.0,1.1],[48.5,0.1],[49.0,-0.5]],
+      [[49.0,-0.5],[49.0,0.0],[49.1,0.5],[49.2,1.0]]
+    ],
+    battles:[
+      {name:'Siege of Uxellodunum',lat:44.64,lng:1.9,year:51,type:'battle',desc:'Last major resistance in Gaul. Caesar cuts off the water supply by tunneling beneath the spring feeding the fortress. The garrison surrenders; Caesar cuts off the hands of all who bore arms — a deliberate act of terror to end the war.'},
+      {name:'Pacification of Gaul',lat:49.1,lng:0.8,year:51,type:'camp',desc:'Caesar\'s final campaigns mopping up remaining resistance among the Belgic tribes. By year\'s end, all of Gaul is pacified and under Roman administration.'},
+    ]
+  }
+};
+
+const allLocations = [
+  {name:'Genava (Geneva)',lat:46.2,lng:6.15,type:'town',desc:'Starting point — Caesar rushes from Rome to deny the Helvetii a route through the Roman province.'},
+  {name:'Lugdunum (Lyon)',lat:45.75,lng:4.83,type:'town',desc:'Capital of Roman Gaul (Gallia Lugdunensis). Key strategic hub for Caesar\'s campaigns.'},
+  {name:'Agedincum (Sens)',lat:48.2,lng:3.3,type:'camp',desc:'Caesar\'s main base of operations in central Gaul. Supply depot and winter quarters for several campaigns.'},
+  {name:'Vesontio (Besançon)',lat:47.24,lng:6.02,type:'town',desc:'Key Sequani fortress city. Caesar seizes it before confronting Ariovistus.'},
+  {name:'Cenabum (Orléans)',lat:47.9,lng:1.9,type:'town',desc:'The massacre of Roman merchants here in 52 BC sparked the great Gallic revolt under Vercingetorix.'},
+  {name:'Portus Itius (Boulogne)',lat:50.72,lng:1.62,type:'camp',desc:'Caesar\'s main embarkation port for both British invasions. He built 600+ ships here for the second invasion.'},
+  {name:'Durocortorum (Reims)',lat:49.26,lng:4.03,type:'town',desc:'Capital of the Remi tribe, Caesar\'s most loyal Gallic allies throughout the wars.'},
+  {name:'Bibracte (Mont Beuvray)',lat:46.88,lng:4.05,type:'town',desc:'Capital of the Aedui, Caesar\'s main Gallic allies. Caesar wrote much of his Gallic Wars commentary here.'},
+  {name:'Alesia (Alise-Ste-Reine)',lat:47.54,lng:4.65,type:'town',desc:'Site of the final decisive siege. Vercingetorix made his last stand here. The hill fort is still visible today.'},
+];
+
+const map = L.map('map', {
+  center:[48.0,3.5],
+  zoom:6,
+  zoomControl:true,
+  attributionControl:false
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  maxZoom:12,minZoom:4
+}).addTo(map);
+
+let activeYear = 'all';
+const yearLayers = {};
+const allLayers = [];
+
+function makeBattleIcon(type){
+  const isB = type==='battle';
+  const html = isB
+    ? `<div style="width:12px;height:12px;border-radius:50%;background:#c0392b;border:2px solid #e74c3c;box-shadow:0 0 6px rgba(192,57,43,0.5)"></div>`
+    : `<div style="width:10px;height:10px;background:none;border:1.5px solid #7a6a4a;transform:rotate(45deg)"></div>`;
+  return L.divIcon({html,iconSize:[14,14],iconAnchor:[7,7],className:''});
+}
+function makeTownIcon(){
+  return L.divIcon({html:`<div style="width:7px;height:7px;border-radius:50%;background:#2a2a2a;border:1px solid #444"></div>`,iconSize:[7,7],iconAnchor:[3.5,3.5],className:''});
+}
+
+function showTooltip(d){
+  const t=document.getElementById('tooltip');
+  t.innerHTML=`<div class="tp-year">${d.year?d.year+' BC':''} — ${d.type==='battle'?'ENGAGEMENT':d.type==='camp'?'BASE / CAMP':'LOCATION'}</div><div class="tp-name">${d.name}</div><div class="tp-desc">${d.desc}</div>`;
+}
+
+function buildLayers(yr){
+  allLayers.forEach(l=>{try{map.removeLayer(l)}catch(e){}});
+  allLayers.length=0;
+
+  Object.entries(campaigns).forEach(([y,c])=>{
+    if(yr!=='all'&&parseInt(y)!==parseInt(yr)) return;
+    const col = c.color;
+    c.routes.forEach(pts=>{
+      const l=L.polyline(pts,{color:col,weight:2,opacity:.7,dashArray:yr==='all'?null:null});
+      l.addTo(map);allLayers.push(l);
+    });
+    c.battles.forEach(b=>{
+      const m=L.marker([b.lat,b.lng],{icon:makeBattleIcon(b.type)});
+      m.on('mouseover',()=>showTooltip(b));
+      m.on('click',()=>showTooltip(b));
+      m.addTo(map);allLayers.push(m);
+    });
+  });
+
+  allLocations.forEach(loc=>{
+    const m=L.marker([loc.lat,loc.lng],{icon:makeTownIcon()});
+    m.on('mouseover',()=>showTooltip({...loc,year:null}));
+    m.on('click',()=>showTooltip({...loc,year:null}));
+    m.addTo(map);allLayers.push(m);
+  });
+}
+
+const yf = document.getElementById('yearFilter');
+const yrs=['all',58,57,56,55,54,53,52,51];
+yrs.forEach(y=>{
+  const b=document.createElement('button');
+  b.className='yr-btn'+(y==='all'?' all-btn':'')+(y==='all'?' active':'');
+  b.textContent=y==='all'?'ALL YEARS':y+' BC';
+  b.onclick=()=>{
+    document.querySelectorAll('.yr-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    activeYear=y;
+    buildLayers(y);
+    if(y!=='all'){
+      const allB=[...Object.values(campaigns)].flatMap(c=>c.battles);
+      const first=campaigns[y]?.battles?.[0];
+      if(first) map.setView([first.lat,first.lng],7,{animate:true});
+    } else {
+      map.setView([48.0,3.5],6,{animate:true});
+    }
+  };
+  yf.appendChild(b);
+});
+
+buildLayers('all');
+</script>
